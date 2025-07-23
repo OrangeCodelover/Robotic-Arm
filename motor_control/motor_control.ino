@@ -1,4 +1,6 @@
-// Display
+// -----------------------------------
+// Libraries and OLED Display Setup
+// -----------------------------------
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -7,116 +9,291 @@
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
 
-// Motors
-#include<Servo.h>
-Servo servo_5;
-Servo servo_4;
+// -----------------------------------
+// Servo Motor Setup
+// -----------------------------------
+#include <Servo.h>
+Servo servo_5;  // Motor on Pin 10
+Servo servo_4;  // Motor on Pin 9
+Servo servo_3;  // Motor on Pin 6
+Servo servo_2;  // Motor on Pin 5
+Servo servo_1;  // Motor on Pin 3
 
-int pos_1 = 45;
-int pos_2 = 45;
-// motor 5 (Pin 10)
-// Max Angle 90 Min Angle 0
-// motor 4 (Pin 9)
-// Max Angle 90 Min Angle 0
-// motor 3 (Pin 6)
-// Max Angle 120 Min Angle 45
-// motor 2 (Pin 5)
-// Max Angle 140 Min Angle 40 (ideal 80)
-// motor 1 (Pin 3)
-// Max Angle 140 Min Angle 40 
-int maxAngle = 90;
-int minAngle = 0;
 
-int testingSpeed = 50;
 
-// Potentiometer
+int pos_5 = 0;
+int pos_4 = 0;
+int pos_3 = 0;
+int pos_2 = 0;
+int pos_1 = 0;
+
+bool motor5_synced = false;
+bool motor4_synced = false;
+bool motor3_synced = false;
+bool motor2_synced = false;
+bool motor1_synced = false;
+
+int pos_5_a = 0;
+int pos_4_a = 0;
+int pos_3_a = 0;
+int pos_2_a = 0;
+int pos_1_a = 0;
+
+
+
+// Motor Angle Ranges (comment reference only)
+// Motor 5 (Pin 10): Max 90°, Min 0°
+// Motor 4 (Pin 9): Max 170°, Min 0°
+// Motor 3 (Pin 6): Max 145°, Min 6°
+// Motor 2 (Pin 5): Max 135°, Min 30° (Ideal: 80°)
+// Motor 1 (Pin 3): Max 140°, Min 40°
+
+// -----------------------------------
+// Inputs: Potentiometer & Button
+// -----------------------------------
 int POTPIN = A1;
 int potcontrol = 0;
 
-// Switch button
-int button_pressed = 12;
+int button_pin = 12;
 int counter = 0;
 
+// -----------------------------------
+// Setup Function
+// -----------------------------------
+void setup() {
+  // Initialize Serial Monitor
+  Serial.begin(9600);
 
-void setup() 
-{
-  //Display
+  // Initialize Display
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
-  
-  Serial.begin(9600);
-  //Motor 5
-  servo_5.attach(10);
-  servo_4.attach(9);
-  // button
-  
-  pinMode(button_pressed,INPUT);
 
+  // Attach Motors
+  servo_5.attach(10);
+  servo_5.write(0);
+
+  servo_4.attach(9);
+  servo_4.write(90);
+
+  servo_3.attach(6);
+  servo_3.write(30);
+
+  servo_2.attach(5);
+  servo_2.write(100);
+
+  servo_1.attach(3);
+  servo_1.write(0);
+
+  // Configure Button Input
+  pinMode(button_pin, INPUT);
 }
 
-void loop() 
-{
-
+// -----------------------------------
+// Main Loop
+// -----------------------------------
+void loop() {
+  // Read potentiometer value
   potcontrol = analogRead(POTPIN);
   Serial.print("Potentiometer position: ");
-  Serial.println(potcontrol);     // Print to Serial Monitor
-  
+  Serial.println(potcontrol);
 
-  if (digitalRead(12) == HIGH){
+  // Check button press and increment counter
+  if (digitalRead(button_pin) == HIGH) {
     counter += 1;
   }
-  Serial.print(" Counter: ");
-  Serial.println(counter);
 
+  // Clear display each loop
   display.clearDisplay();
 
-  switch(counter % 3){
-    // Motor 5
+  // Choose motor based on counter value
+  switch (counter % 5) {
     case 0:
-      pos_1 = float(potcontrol)/1024 * 90;
-      Serial.print(" position_1: ");
-      Serial.println(pos_1);     // Print to Serial Monitor
-      servo_5.write(pos_1);
-      // Print "motor 5" in normal size
-      display.setTextSize(1);               // Header size
+      // Motor 5
+      motor4_synced = false;
+      motor3_synced = false;
+      motor2_synced = false;
+      motor1_synced = false;
+
+      pos_5_a = servo_5.read();
+      pos_5 = float(potcontrol) / 1024 * 90;
+      if ((abs(pos_5 - pos_5_a) > 10) && !(motor5_synced)){
+        servo_5.write(pos_5_a);      
+      }
+      else{
+        servo_5.write(pos_5);
+        motor5_synced = true;
+      }
+
+      // Display info on OLED
+      display.setTextSize(1);
       display.setTextColor(SSD1306_WHITE);
       display.setCursor(0, 0);
-      display.println(F("MOTOR 5 (TIP)"));
-      // Print "90" in double size
-      display.setTextSize(2);               // Double size
-      display.setCursor(0, 16);             // Lower position
+      display.println(F("MOTOR 5"));
+
+      display.setTextSize(1);
+      display.setCursor(0, 16);
+      display.print(F("Control: "));
+      display.println(pos_5);
+
+      display.setTextSize(1);
+      display.setCursor(0, 24);
       display.print(F("LOC: "));
-      display.println(pos_1);
+      display.println(pos_5_a);
       display.display();
       break;
-    // Motor 4
+
     case 1:
-      pos_2 = float(potcontrol)/1024*170;
-      Serial.print(" position_2: ");
-      Serial.println(pos_2);     // Print to Serial Monitor
-      servo_4.write(pos_2);
-      // Print "motor 5" in normal size
-      display.setTextSize(1);               // Header size
+      // Motor 4
+      motor5_synced = false;
+      motor3_synced = false;
+      motor2_synced = false;
+      motor1_synced = false;
+
+      pos_4_a = servo_4.read();
+      pos_4 = float(potcontrol) / 1024 * 170;
+      if ((abs(pos_4 - pos_4_a) > 10) && !(motor4_synced)){
+        servo_4.write(pos_4_a);      
+      }
+      else{
+        servo_4.write(pos_4);
+        motor4_synced = true;
+      }      
+
+      // Display info on OLED
+      display.setTextSize(1);
       display.setTextColor(SSD1306_WHITE);
       display.setCursor(0, 0);
-      display.println(F("MOTOR 4 (Elbow)"));
-      // Print "90" in double size
-      display.setTextSize(2);               // Double size
-      display.setCursor(0, 16);             // Lower position
+      display.println(F("MOTOR 4"));
+
+      display.setTextSize(1);
+      display.setCursor(0, 16);
+      display.print(F("Control: "));
+      display.println(pos_4);
+
+      display.setTextSize(1);
+      display.setCursor(0, 24);
       display.print(F("LOC: "));
+      display.println(pos_4_a);
+      display.display();
+      break;
+    
+    case 2:
+      // Motor 3
+      motor5_synced = false;
+      motor4_synced = false;
+      motor2_synced = false;
+      motor1_synced = false;
+
+      pos_3_a = servo_3.read();
+      pos_3 = float(potcontrol) / 1024 * 130 + 10;
+      if ((abs(pos_3 - pos_3_a) > 10) && !(motor3_synced)){
+        servo_3.write(pos_3_a);      
+      }
+      else{
+        servo_3.write(pos_3);
+        motor3_synced = true;
+      }      
+
+      // Display info on OLED
+      display.setTextSize(1);
+      display.setTextColor(SSD1306_WHITE);
+      display.setCursor(0, 0);
+      display.println(F("MOTOR 3"));
+
+      display.setTextSize(1);
+      display.setCursor(0, 16);
+      display.print(F("Control: "));
+      display.println(pos_3);
+
+      display.setTextSize(1);
+      display.setCursor(0, 24);
+      display.print(F("LOC: "));
+      display.println(pos_3_a);
+      display.display();
+      break;
+
+    case 3:
+      // Motor 2
+      motor5_synced = false;
+      motor4_synced = false;
+      motor3_synced = false;
+      motor1_synced = false;
+
+      pos_2_a = servo_2.read();
+      pos_2 = float(potcontrol) / 1024 * 100 + 30;
+      if ((abs(pos_2 - pos_2_a) > 10) && !(motor2_synced)){
+        servo_2.write(pos_2_a);      
+      }
+      else{
+        servo_2.write(pos_2);
+        motor2_synced = true;
+      }      
+
+      // Display info on OLED
+      display.setTextSize(1);
+      display.setTextColor(SSD1306_WHITE);
+      display.setCursor(0, 0);
+      display.println(F("MOTOR 2"));
+
+      display.setTextSize(1);
+      display.setCursor(0, 16);
+      display.print(F("Control: "));
       display.println(pos_2);
+
+      display.setTextSize(1);
+      display.setCursor(0, 24);
+      display.print(F("LOC: "));
+      display.println(pos_2_a);
+      display.display();
+      break;
+
+
+    case 4:
+      // Motor 1
+      motor5_synced = false;
+      motor4_synced = false;
+      motor3_synced = false;
+      motor2_synced = false;
+
+      pos_1_a = servo_1.read();
+      pos_1 = float(potcontrol) / 1024 * 160;
+      if ((abs(pos_1 - pos_1_a) > 10) && !(motor1_synced)){
+        servo_1.write(pos_1_a);      
+      }
+      else{
+        servo_1.write(pos_1);
+        motor1_synced = true;
+      }      
+
+      // Display info on OLED
+      display.setTextSize(1);
+      display.setTextColor(SSD1306_WHITE);
+      display.setCursor(0, 0);
+      display.println(F("MOTOR 1"));
+
+      display.setTextSize(1);
+      display.setCursor(0, 16);
+      display.print(F("Control: "));
+      display.println(pos_1);
+
+      display.setTextSize(1);
+      display.setCursor(0, 24);
+      display.print(F("LOC: "));
+      display.println(pos_1_a);
       display.display();
       break;
 
     default:
-      display.setTextSize(1);               // Header size
+      // Fallback: prompt to select motor
+      display.setTextSize(1);
       display.setTextColor(SSD1306_WHITE);
       display.setCursor(0, 0);
       display.println(F("Choose a motor"));
 
-      display.setTextSize(2);               // Double size
-      display.setCursor(0, 16);             // Lower position
+      display.setTextSize(2);
+      display.setCursor(0, 16);
       display.print(F("CHOOSE "));
       display.display();
+      break;
   }
 }
