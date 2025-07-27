@@ -22,11 +22,11 @@ serialInst.open()
 
 while True:
     
-    motor = input("Select motor:  ")
-    serialInst.write(motor.encode('utf-8'))
-    print("The motor is : ", motor)
+    command = input("Select motor:  ")
+    serialInst.write(command.encode('utf-8'))
+    print("The motor is : ", command)
     
     
     
-    if motor == 'EXIT':
+    if command == 'EXIT':
         exit()
