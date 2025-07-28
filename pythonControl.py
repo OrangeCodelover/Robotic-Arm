@@ -1,6 +1,17 @@
 import tkinter as tk
+from tkinter import messagebox
 #pip install pyserial
+import serial
 import serial.tools.list_ports
+
+def connect_serial():
+    port = selected_port.get()
+    try:
+        serialInst.port = port
+        serialInst.open()
+        messagebox.showinfo("Connection Successful", f"Connected to {port}")
+    except serial.SerialException as e:
+        messagebox.showerror("Connection Failed", f"Error: {e}")
 
 # Create a Window
 win = tk.Tk()
@@ -13,8 +24,22 @@ motor_3_on = tk.IntVar()
 motor_2_on = tk.IntVar()
 motor_1_on = tk.IntVar()
 
-motor_options = ["Motor 1", "Motor 2", "Motor 3", "Motor 4", "Motor 5"]
+# Display Ports
+ports = serial.tools.list_ports.comports()
+serialInst = serial.Serial()
+portsList = []
 
+for one in ports:
+    portsList.append(one.device)
+    
+selected_port = tk.StringVar(win)
+   
+# Set the default value of the variable
+selected_port.set("Select COM Port")
+dropdown = tk.OptionMenu(win, selected_port, *portsList)
+dropdown.grid(column= 2, row=0)
+connect_btn = tk.Button(win, text="Connect", command=connect_serial)
+connect_btn.grid(column=3, row=0, padx=10)
 
 # Motor 5
 checkbox_5 = tk.Checkbutton(win, text="Motor 5", variable=motor_5_on)
@@ -39,26 +64,6 @@ rotationAngle_3.grid(column=3, row=3)
 tk.Label(win, text="Speed (0 to 180) ").grid(column = 4, row= 3)
 
 
-
-ports = serial.tools.list_ports.comports()
-serialInst = serial.Serial()
-portsList = []
-
-for one in ports:
-    portsList.append(str(one))
-    print(str(one))
-    
-com = input("Select COM Port for Arduino #: ")
-
-for i in range(len(portsList)):
-    if portsList[i]. startswith("COM" + str(com)):
-        use = "COM" + str(com)
-        print ("The Port: ", use)
-        
-serialInst.baudrate = 9600
-serialInst.port = use
-serialInst.open()
-
 while True:
     
     command = input("Select motor:  ")
@@ -69,3 +74,4 @@ while True:
     
     if command == 'EXIT':
         exit()
+        
