@@ -39,6 +39,8 @@ int pos_3_a = 0;
 int pos_2_a = 0;
 int pos_1_a = 0;
 
+int motorInt;
+
 
 
 // Motor Angle Ranges (comment reference only)
@@ -88,25 +90,22 @@ void setup() {
   pinMode(button_pin, INPUT);
 }
 
-// -----------------------------------
-// Main Loop
-// -----------------------------------
-void loop() {
-  // Read potentiometer value
-  potcontrol = analogRead(POTPIN);
-  Serial.print("Potentiometer position: ");
-  Serial.println(potcontrol);
 
-  // Check button press and increment counter
-  if (digitalRead(button_pin) == HIGH) {
+void loop() {
+  potcontrol = analogRead(POTPIN);
+  if (Serial.available() > 0){
+    String msg = Serial.readString();
+    motorInt = msg.toInt();
+  }
+
+  if (digitalRead(12) == HIGH){
     counter += 1;
   }
 
-  // Clear display each loop
   display.clearDisplay();
 
-  // Choose motor based on counter value
-  switch (counter % 5) {
+  switch(motorInt){
+    // Motor 5
     case 0:
       // Motor 5
       motor4_synced = false;
@@ -176,7 +175,7 @@ void loop() {
       display.println(pos_4_a);
       display.display();
       break;
-    
+      
     case 2:
       // Motor 3
       motor5_synced = false;
@@ -284,16 +283,15 @@ void loop() {
       break;
 
     default:
-      // Fallback: prompt to select motor
-      display.setTextSize(1);
+      display.setTextSize(1);               // Header size
       display.setTextColor(SSD1306_WHITE);
       display.setCursor(0, 0);
       display.println(F("Choose a motor"));
 
-      display.setTextSize(2);
-      display.setCursor(0, 16);
+      display.setTextSize(2);               // Double size
+      display.setCursor(0, 16);             // Lower position
       display.print(F("CHOOSE "));
       display.display();
-      break;
+
   }
 }
