@@ -149,7 +149,7 @@ void loop() {
       motor1_synced = false;
 
       pos_4_a = servo_4.read();
-      pos_4 = float(potcontrol) / 1024 * 170;
+      pos_4 = float(potcontrol) / 1024 * 160;
       if ((abs(pos_4 - pos_4_a) > 10) && !(motor4_synced)){
         servo_4.write(pos_4_a);      
       }
